@@ -1,7 +1,6 @@
 CREATE DATABASE IF NOT EXISTS sistema_barbearia;
 USE sistema_barbearia;
 
--- Tabela: Usuario
 CREATE TABLE Usuario (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -13,7 +12,6 @@ CREATE TABLE Usuario (
     telefone VARCHAR(20)
 );
 
--- Tabela: Barbearia
 CREATE TABLE Barbearia (
     id_barbearia INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
@@ -24,7 +22,6 @@ CREATE TABLE Barbearia (
     FOREIGN KEY (dono_id) REFERENCES Usuario(id_usuario)
 );
 
--- Tabela intermediária: Barbeiros_Barbearias
 CREATE TABLE Barbeiros_Barbearias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     barbeiro_id INT NOT NULL,
@@ -33,13 +30,11 @@ CREATE TABLE Barbeiros_Barbearias (
     FOREIGN KEY (barbearia_id) REFERENCES Barbearia(id_barbearia)
 );
 
--- Tabela: Servico
 CREATE TABLE Servico (
     id_servico INT AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(50) NOT NULL
 );
 
--- Tabela: Barbearia_Servicos (com preço)
 CREATE TABLE Barbearia_Servicos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     barbearia_id INT NOT NULL,
@@ -49,7 +44,6 @@ CREATE TABLE Barbearia_Servicos (
     FOREIGN KEY (servico_id) REFERENCES Servico(id_servico)
 );
 
--- Tabela: Agendamento
 CREATE TABLE Agendamento (
     id_agendamento INT AUTO_INCREMENT PRIMARY KEY,
     cliente_id INT NOT NULL,
@@ -63,7 +57,6 @@ CREATE TABLE Agendamento (
     FOREIGN KEY (barbearia_id) REFERENCES Barbearia(id_barbearia)
 );
 
--- Tabela: Agendamento_Servicos
 CREATE TABLE Agendamento_Servicos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     agendamento_id INT NOT NULL,
@@ -71,3 +64,33 @@ CREATE TABLE Agendamento_Servicos (
     FOREIGN KEY (agendamento_id) REFERENCES Agendamento(id_agendamento),
     FOREIGN KEY (servico_id) REFERENCES Servico(id_servico)
 );
+
+SELECT 
+    a.id_agendamento,
+    cliente.nome AS nome_cliente,
+    barbeiro.nome AS nome_barbeiro,
+    b.nome AS nome_barbearia,
+    a.data,
+    a.hora,
+    a.status,
+    GROUP_CONCAT(s.nome SEPARATOR ', ') AS servicos
+FROM 
+    Agendamento a
+JOIN 
+    Usuario cliente ON a.cliente_id = cliente.id_usuario
+JOIN 
+    Usuario barbeiro ON a.barbeiro_id = barbeiro.id_usuario
+JOIN 
+    Barbearia b ON a.barbearia_id = b.id_barbearia
+LEFT JOIN 
+    Agendamento_Servicos ags ON a.id_agendamento = ags.agendamento_id
+LEFT JOIN 
+    Servico s ON ags.servico_id = s.id_servico
+GROUP BY 
+    a.id_agendamento,
+    cliente.nome,
+    barbeiro.nome,
+    b.nome,
+    a.data,
+    a.hora,
+    a.status;
